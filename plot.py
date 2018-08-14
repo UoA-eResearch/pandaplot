@@ -47,11 +47,14 @@ def plot(df, zones):
   fig, subplots = plt.subplots(nrows=zones + 1, sharex=True, figsize=(10,10))
   fig.suptitle(figtitle)
 
+  zmin = df[axes[2]].min()
+  zmax = df[axes[2]].max()
+
   for z in range(zones + 1):
     dz = df[df["zone"] == z]
     ax = subplots[z]
     piv = pd.pivot_table(dz, values=axes[2], index = axes[1], columns=axes[0])
-    im = ax.imshow(piv, cmap='coolwarm', aspect='auto', interpolation='bicubic')
+    im = ax.imshow(piv, cmap='coolwarm', aspect='auto', interpolation='bicubic', vmin=zmin, vmax=zmax)
     ax.invert_yaxis()
 
     ax.set_xticklabels(piv.columns, rotation=90)
