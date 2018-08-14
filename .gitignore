@@ -102,3 +102,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Common image formats
+*.eps
+*.png
+*.tif
+*.jpg
+
+# Data
+
+Plot_Data_Elem
