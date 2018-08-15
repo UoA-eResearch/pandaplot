@@ -3,7 +3,6 @@
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
 import os
 
 parser = argparse.ArgumentParser(description='Make a graph')
@@ -13,9 +12,14 @@ parser.add_argument('-s', '--save', action='store_true', help='Whether to save t
 parser.add_argument('-o', '--output_filename', help='The filename to save the resulting figure to')
 parser.add_argument('-r', '--recursive', action='store_true', help='Whether to traverse the directory tree looking for FILE')
 parser.add_argument('-od', '--output_directory', default="plots", help='When running recursively, which directory to save plots to')
+parser.add_argument('-e', '--extent', help='Extent passed to imshow - to limit the drawn area. Left, right, bottom, top.')
+parser.add_argument('-i', '--interval', help='Spacing between tick labels', type=int, default=50)
 
 args = parser.parse_args()
 axes = args.axes.split(",")
+extent = None
+if args.extent:
+  extent = [int(i) for i in args.extent.split(",")]
 figtitle = "{} vs {} vs {}".format(*axes)
 
 def search_files(directory='.'):
@@ -41,6 +45,10 @@ def read_file(filename):
       parsed_line.append(zone)
       data.append(parsed_line)
   df = pd.DataFrame(data, columns = headers)
+  x = df[axes[0]]
+  y = df[axes[1]]
+  mask = (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
+  df = df[mask]
   return df, zone
 
 def plot(df, zones):
@@ -57,12 +65,13 @@ def plot(df, zones):
     im = ax.imshow(piv, cmap='coolwarm', aspect='auto', interpolation='bicubic', vmin=zmin, vmax=zmax)
     ax.invert_yaxis()
 
-    ax.set_xticklabels(piv.columns, rotation=90)
-    ax.set_yticklabels(piv.index)
-    ax.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
+    ax.set_xticks(range(0, len(piv.columns), args.interval))
+    ax.set_yticks(range(0, len(piv.index), args.interval))
+    ax.set_xticklabels([int(round(x)) for x in piv.columns[::args.interval]], rotation=90)
+    ax.set_yticklabels([int(round(y)) for y in piv.index[::args.interval]])
     ax.set_xlabel(axes[0], fontsize=10)
     ax.set_ylabel(axes[1], fontsize=10)
-    ax.set_title("Zone {}".format(z))
+    ax.set_title("Day {}".format(z * 365))
     ax.label_outer()
 
   fig.colorbar(im, ax=subplots.ravel().tolist(), label=axes[2], format='%.0e')
