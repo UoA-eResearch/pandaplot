@@ -14,12 +14,16 @@ parser.add_argument('-r', '--recursive', action='store_true', help='Whether to t
 parser.add_argument('-od', '--output_directory', default="plots", help='When running recursively, which directory to save plots to')
 parser.add_argument('-e', '--extent', help='Extent passed to imshow - to limit the drawn area. Left, right, bottom, top.')
 parser.add_argument('-i', '--interval', help='Spacing between tick labels', type=int, default=50)
+parser.add_argument('-z', '--zones', help='Which zones to plot')
 
 args = parser.parse_args()
 axes = args.axes.split(",")
 extent = None
 if args.extent:
   extent = [int(i) for i in args.extent.split(",")]
+zones = None
+if args.zones:
+  zones = [int(i) for i in args.zones.split(",")]
 figtitle = "{} vs {} vs {}".format(*axes)
 
 def search_files(directory='.'):
@@ -30,6 +34,7 @@ def search_files(directory='.'):
   return hits
 
 def read_file(filename):
+  global zones
   with open(filename) as f:
     lines = f.readlines()
 
@@ -47,20 +52,22 @@ def read_file(filename):
   df = pd.DataFrame(data, columns = headers)
   x = df[axes[0]]
   y = df[axes[1]]
-  mask = (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
-  df = df[mask]
-  return df, zone
+  if extent:
+    mask = (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
+    df = df[mask]
+  if not zones:
+    zones = list(range(zone))
+  return df
 
-def plot(df, zones):
-  fig, subplots = plt.subplots(nrows=zones + 1, sharex=True, figsize=(10,10))
-  fig.suptitle(figtitle)
+def plot(df):
+  fig, subplots = plt.subplots(nrows=len(zones), sharex=True, figsize=(10,10))
 
   zmin = df[axes[2]].min()
   zmax = df[axes[2]].max()
 
-  for z in range(zones + 1):
+  for i, z in enumerate(zones):
     dz = df[df["zone"] == z]
-    ax = subplots[z]
+    ax = subplots[i]
     piv = pd.pivot_table(dz, values=axes[2], index = axes[1], columns=axes[0])
     im = ax.imshow(piv, cmap='coolwarm', aspect='auto', interpolation='bicubic', vmin=zmin, vmax=zmax)
     ax.invert_yaxis()
@@ -83,14 +90,14 @@ if args.recursive:
     os.mkdir(args.output_directory)
   for f in files:
     print("plotting " + f)
-    df, zones= read_file(args.file)
-    fig = plot(df, zones)
+    df = read_file(args.file)
+    fig = plot(df)
     safe_f = f.replace(args.file, "").replace("/", "_").replace(".", "")
     filename = os.path.join(args.output_directory, safe_f)
     fig.savefig(filename)
 else:
-  df, zones = read_file(args.file)
-  fig = plot(df, zones)
+  df = read_file(args.file)
+  fig = plot(df)
   if args.save:
     if args.output_filename:
       filename = args.output_filename
