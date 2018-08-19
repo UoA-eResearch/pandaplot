@@ -9,6 +9,7 @@ import os
 parser = argparse.ArgumentParser(description='Make a graph')
 parser.add_argument('-f', '--file', default="Plot_Data_Elem", help='The file to read in')
 parser.add_argument('-a', '--axes', default='r,z,P', help='Which columns to plot, in the x y and z dimensions. Comma separated, defaults to r,z,P')
+parser.add_argument('-al', '--axeslabels', help='Labels for the x,y,z axes')
 parser.add_argument('-s', '--save', action='store_true', help='Whether to save the figure or display it')
 parser.add_argument('-o', '--output_filename', help='The filename to save the resulting figure to')
 parser.add_argument('-r', '--recursive', action='store_true', help='Whether to traverse the directory tree looking for FILE')
@@ -19,6 +20,11 @@ parser.add_argument('-z', '--zones', help='Which zones to plot')
 
 args = parser.parse_args()
 axes = args.axes.split(",")
+axeslabels = []
+if args.axeslabels:
+  axeslabels = args.axeslabels.split(",")
+else:
+  axeslabels = axes
 extent = None
 if args.extent:
   extent = [int(i) for i in args.extent.split(",")]
@@ -75,12 +81,12 @@ def plot(df):
       ax.set_xlim(extent[:2])
       ax.set_ylim(extent[2:])
     plt.xticks(rotation=90)
-    ax.set_xlabel(axes[0], fontsize=10)
-    ax.set_ylabel(axes[1], fontsize=10)
+    ax.set_xlabel(axeslabels[0], fontsize=10)
+    ax.set_ylabel(axeslabels[1], fontsize=10)
     ax.set_title("Day {}".format(z * 365))
     ax.label_outer()
 
-  fig.colorbar(im, ax=subplots, label=axes[2], format='%.0e')
+  fig.colorbar(im, ax=subplots, label=axeslabels[2], format='%.0e')
   return fig
 
 if args.recursive:
