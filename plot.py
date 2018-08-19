@@ -74,6 +74,7 @@ def plot(df):
     if extent:
       ax.set_xlim(extent[:2])
       ax.set_ylim(extent[2:])
+    plt.xticks(rotation=90)
     ax.set_xlabel(axes[0], fontsize=10)
     ax.set_ylabel(axes[1], fontsize=10)
     ax.set_title("Day {}".format(z * 365))
