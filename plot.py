@@ -56,11 +56,12 @@ def read_file(filename):
     mask = (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
     df = df[mask]
   if not zones:
-    zones = list(range(zone))
+    zones = list(range(zone + 1))
   return df
 
 def plot(df):
-  fig, subplots = plt.subplots(nrows=len(zones), sharex=True, figsize=(10,10))
+  fig, subplots = plt.subplots(nrows=len(zones), sharex=True, figsize=(10,10), squeeze=False)
+  subplots = subplots.ravel()
 
   zmin = df[axes[2]].min()
   zmax = df[axes[2]].max()
@@ -81,7 +82,7 @@ def plot(df):
     ax.set_title("Day {}".format(z * 365))
     ax.label_outer()
 
-  fig.colorbar(im, ax=subplots.ravel().tolist(), label=axes[2], format='%.0e')
+  fig.colorbar(im, ax=subplots, label=axes[2], format='%.0e')
   return fig
 
 if args.recursive:
