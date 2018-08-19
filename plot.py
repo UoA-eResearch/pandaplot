@@ -86,7 +86,7 @@ def plot(df):
     ax.set_title("Day {}".format(z * 365))
     ax.label_outer()
 
-  fig.colorbar(im, ax=subplots, label=axeslabels[2], format='%.0e')
+  fig.colorbar(im, ax=subplots, label=axeslabels[2], ticks=ticker.LinearLocator(), format='%.2e')
   return fig
 
 if args.recursive:
