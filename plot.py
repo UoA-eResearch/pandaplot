@@ -3,6 +3,7 @@
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import os
 
 parser = argparse.ArgumentParser(description='Make a graph')
@@ -12,7 +13,7 @@ parser.add_argument('-s', '--save', action='store_true', help='Whether to save t
 parser.add_argument('-o', '--output_filename', help='The filename to save the resulting figure to')
 parser.add_argument('-r', '--recursive', action='store_true', help='Whether to traverse the directory tree looking for FILE')
 parser.add_argument('-od', '--output_directory', default="plots", help='When running recursively, which directory to save plots to')
-parser.add_argument('-e', '--extent', help='Extent passed to imshow - to limit the drawn area. Left, right, bottom, top.')
+parser.add_argument('-e', '--extent', help='Limit the drawn area. Left, right, bottom, top.')
 parser.add_argument('-i', '--interval', help='Spacing between tick labels', type=int, default=50)
 parser.add_argument('-z', '--zones', help='Which zones to plot')
 
@@ -52,9 +53,6 @@ def read_file(filename):
   df = pd.DataFrame(data, columns = headers)
   x = df[axes[0]]
   y = df[axes[1]]
-  if extent:
-    mask = (x > extent[0]) & (x < extent[1]) & (y > extent[2]) & (y < extent[3])
-    df = df[mask]
   if not zones:
     zones = list(range(zone + 1))
   return df
@@ -70,13 +68,12 @@ def plot(df):
     dz = df[df["zone"] == z]
     ax = subplots[i]
     piv = pd.pivot_table(dz, values=axes[2], index = axes[1], columns=axes[0])
-    im = ax.imshow(piv, cmap='coolwarm', aspect='auto', interpolation='bicubic', vmin=zmin, vmax=zmax)
-    ax.invert_yaxis()
-
-    ax.set_xticks(range(0, len(piv.columns), args.interval))
-    ax.set_yticks(range(0, len(piv.index), args.interval))
-    ax.set_xticklabels([int(round(x)) for x in piv.columns[::args.interval]], rotation=90)
-    ax.set_yticklabels([int(round(y)) for y in piv.index[::args.interval]])
+    im = ax.pcolormesh(piv.columns, piv.index, piv, cmap='coolwarm', vmin=zmin, vmax=zmax)
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(args.interval))
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(args.interval))
+    if extent:
+      ax.set_xlim(extent[:2])
+      ax.set_ylim(extent[2:])
     ax.set_xlabel(axes[0], fontsize=10)
     ax.set_ylabel(axes[1], fontsize=10)
     ax.set_title("Day {}".format(z * 365))
