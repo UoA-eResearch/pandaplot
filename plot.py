@@ -83,7 +83,7 @@ def plot(df):
     plt.xticks(rotation=90)
     ax.set_xlabel(axeslabels[0], fontsize=10)
     ax.set_ylabel(axeslabels[1], fontsize=10)
-    ax.set_title("Day {}".format(z * 365))
+    ax.set_title("Day {}".format(z * 365), position=(1.01, .5), rotation=-90, bbox=dict(facecolor='gray', alpha=0.5), horizontalalignment='left', verticalalignment='center', transform=ax.transAxes, fontsize=8)
     ax.label_outer()
 
   fig.colorbar(im, ax=subplots, label=axeslabels[2], ticks=ticker.LinearLocator(), format='%.2e')
