@@ -85,6 +85,10 @@ def plot(df):
     ax.set_xlabel(axeslabels[0], fontsize=args.font_size)
     ax.set_ylabel(axeslabels[1], fontsize=args.font_size)
     title = ax.set_title("Day {}".format(z * 365), position=(1.01, .5), rotation=-90, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes, fontsize=args.font_size)
+    rect = plt.Rectangle(
+      (1,1), width=1, height=.05, angle=-90, linewidth=1, transform=ax.transAxes, fill=False, clip_on=False
+    )
+    ax.add_patch(rect)
     ax.label_outer()
 
   cb = fig.colorbar(im, ax=subplots, ticks=ticker.LinearLocator(args.ticks), format='%.2e')
