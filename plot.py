@@ -7,6 +7,7 @@ import matplotlib.ticker as ticker
 import os
 
 parser = argparse.ArgumentParser(description='Make a graph')
+parser.add_argument('-c', '--colormap', default="jet", help='Which colorscheme to use')
 parser.add_argument('-f', '--file', default="Plot_Data_Elem", help='The file to read in')
 parser.add_argument('-a', '--axes', default='r,z,P', help='Which columns to plot, in the x y and z dimensions. Comma separated, defaults to r,z,P')
 parser.add_argument('-al', '--axeslabels', help='Labels for the x,y,z axes')
@@ -15,7 +16,8 @@ parser.add_argument('-o', '--output_filename', help='The filename to save the re
 parser.add_argument('-r', '--recursive', action='store_true', help='Whether to traverse the directory tree looking for FILE')
 parser.add_argument('-od', '--output_directory', default="plots", help='When running recursively, which directory to save plots to')
 parser.add_argument('-e', '--extent', help='Limit the drawn area. Left, right, bottom, top.')
-parser.add_argument('-i', '--interval', help='Spacing between tick labels', type=int, default=50)
+parser.add_argument('-t', '--ticks', help='Number of ticks', default=5)
+parser.add_argument('-fs', '--font_size', help='Font size', type=int, default=10)
 parser.add_argument('-z', '--zones', help='Which zones to plot')
 
 args = parser.parse_args()
@@ -74,19 +76,19 @@ def plot(df):
     dz = df[df["zone"] == z]
     ax = subplots[i]
     piv = pd.pivot_table(dz, values=axes[2], index = axes[1], columns=axes[0])
-    im = ax.pcolormesh(piv.columns, piv.index, piv, cmap='coolwarm', vmin=zmin, vmax=zmax)
-    ax.yaxis.set_major_locator(ticker.MultipleLocator(args.interval))
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(args.interval))
+    im = ax.pcolormesh(piv.columns, piv.index, piv, cmap=args.colormap, vmin=zmin, vmax=zmax)
+    ax.yaxis.set_major_locator(ticker.LinearLocator(args.ticks))
+    ax.xaxis.set_major_locator(ticker.LinearLocator(args.ticks))
     if extent:
       ax.set_xlim(extent[:2])
       ax.set_ylim(extent[2:])
-    plt.xticks(rotation=90)
-    ax.set_xlabel(axeslabels[0], fontsize=10)
-    ax.set_ylabel(axeslabels[1], fontsize=10)
-    ax.set_title("Day {}".format(z * 365), position=(1.01, .5), rotation=-90, bbox=dict(facecolor='gray', alpha=0.5), horizontalalignment='left', verticalalignment='center', transform=ax.transAxes, fontsize=8)
+    ax.set_xlabel(axeslabels[0], fontsize=args.font_size)
+    ax.set_ylabel(axeslabels[1], fontsize=args.font_size)
+    title = ax.set_title("Day {}".format(z * 365), position=(1.01, .5), rotation=-90, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes, fontsize=args.font_size)
     ax.label_outer()
 
-  fig.colorbar(im, ax=subplots, label=axeslabels[2], ticks=ticker.LinearLocator(), format='%.2e')
+  cb = fig.colorbar(im, ax=subplots, ticks=ticker.LinearLocator(args.ticks), format='%.2e')
+  cb.ax.set_title(axeslabels[2], fontsize=args.font_size)
   return fig
 
 if args.recursive:
