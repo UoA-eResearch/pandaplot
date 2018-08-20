@@ -2,6 +2,7 @@
 
 import argparse
 import pandas as pd
+import math
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import os
@@ -19,6 +20,7 @@ parser.add_argument('-e', '--extent', help='Limit the drawn area. Left, right, b
 parser.add_argument('-t', '--ticks', help='Number of ticks', default=5)
 parser.add_argument('-fs', '--font_size', help='Font size', type=int, default=10)
 parser.add_argument('-z', '--zones', help='Which zones to plot')
+parser.add_argument('-sd', '--sample_data', action='store_true', help='Plot some sample data')
 
 args = parser.parse_args()
 axes = args.axes.split(",")
@@ -106,6 +108,22 @@ if args.recursive:
     safe_f = f.replace(args.file, "").replace("/", "_").replace(".", "")
     filename = os.path.join(args.output_directory, safe_f)
     fig.savefig(filename)
+elif args.sample_data:
+  data = []
+  axes = ["x", "y", "z"]
+  axeslabels = axes
+  zones = [0, 1, 2, 3]
+  for zone in zones:
+    for x in range(0, 100):
+      for y in range(0, 100):
+        z = math.sin(x / 50.0) * math.sin(y / 50.0) * zone
+        data.append([x, y, z, zone])
+  df = pd.DataFrame(data, columns = ["x", "y", "z", "zone"])
+  fig = plot(df)
+  if args.save:
+    fig.savefig("sample.png")
+  else:
+    plt.show()
 else:
   df = read_file(args.file)
   fig = plot(df)
