@@ -20,6 +20,7 @@ parser.add_argument('-e', '--extent', help='Limit the drawn area. Left, right, b
 parser.add_argument('-t', '--ticks', help='Number of ticks', default=5)
 parser.add_argument('-fs', '--font_size', help='Font size', type=int, default=10)
 parser.add_argument('-z', '--zones', help='Which zones to plot')
+parser.add_argument('-zf', '--zone_factor', default=365, type=int, help='Factor to multiply the zone number by')
 parser.add_argument('-sd', '--sample_data', action='store_true', help='Plot some sample data')
 
 args = parser.parse_args()
@@ -86,7 +87,7 @@ def plot(df):
       ax.set_ylim(extent[2:])
     ax.set_xlabel(axeslabels[0], fontsize=args.font_size)
     ax.set_ylabel(axeslabels[1], fontsize=args.font_size)
-    title = ax.set_title("Day {}".format(z * 365), position=(1.01, .5), rotation=-90, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes, fontsize=args.font_size)
+    title = ax.set_title("Day {}".format(z * args.zone_factor), position=(1.01, .5), rotation=-90, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes, fontsize=args.font_size)
     rect = plt.Rectangle(
       (1,1), width=1, height=.05, angle=-90, linewidth=1, transform=ax.transAxes, fill=False, clip_on=False
     )
