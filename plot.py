@@ -64,7 +64,11 @@ def read_file(filename):
   df = pd.DataFrame(data, columns = headers)
   x = df[axes[0]]
   y = df[axes[1]]
-  if not zones:
+  if zones:
+    if zone < max(zones):
+      print("ERROR: {} does not exist in {} - {} is the highest zone".format(max(zones), filename, zone))
+      exit(1)
+  else:
     zones = list(range(zone + 1))
   return df
 
