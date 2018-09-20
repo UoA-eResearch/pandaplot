@@ -22,6 +22,8 @@ parser.add_argument('-fs', '--font_size', help='Font size', type=int, default=10
 parser.add_argument('-z', '--zones', help='Which zones to plot')
 parser.add_argument('-zf', '--zone_factor', default=365, type=int, help='Factor to multiply the zone number by')
 parser.add_argument('-sd', '--sample_data', action='store_true', help='Plot some sample data')
+parser.add_argument('-vmin', type=float, help='Override the colorbar min value')
+parser.add_argument('-vmax', type=float, help='Override the colorbar max value')
 
 args = parser.parse_args()
 axes = args.axes.split(",")
@@ -84,6 +86,11 @@ def plot(df):
   else:
     zmin = df[axes[2]].min()
     zmax = df[axes[2]].max()
+
+  if args.vmin:
+    zmin = args.vmin
+  if args.vmax:
+    zmax = args.vmax
 
   for i, z in enumerate(zones):
     dz = df[df["zone"] == z]
