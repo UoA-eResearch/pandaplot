@@ -62,8 +62,6 @@ def read_file(filename):
       parsed_line.append(zone)
       data.append(parsed_line)
   df = pd.DataFrame(data, columns = headers)
-  x = df[axes[0]]
-  y = df[axes[1]]
   if zones:
     if zone < max(zones):
       print("ERROR: {} does not exist in {} - {} is the highest zone".format(max(zones), filename, zone))
@@ -76,8 +74,16 @@ def plot(df):
   fig, subplots = plt.subplots(nrows=len(zones), sharex=True, figsize=(10,10), squeeze=False)
   subplots = subplots.ravel()
 
-  zmin = df[axes[2]].min()
-  zmax = df[axes[2]].max()
+  if extent:
+    x = df[axes[0]]
+    y = df[axes[1]]
+    mask = (x >= extent[0]) & (x <= extent[1]) & (y >= extent[2]) & (y <= extent[3])
+    masked_df = df[mask]
+    zmin = masked_df[axes[2]].min()
+    zmax = masked_df[axes[2]].max()
+  else:
+    zmin = df[axes[2]].min()
+    zmax = df[axes[2]].max()
 
   for i, z in enumerate(zones):
     dz = df[df["zone"] == z]
