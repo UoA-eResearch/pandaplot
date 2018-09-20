@@ -130,8 +130,7 @@ elif args.sample_data:
   data = []
   axes = ["x", "y", "z"]
   axeslabels = axes
-  zones = [0, 1, 2, 3]
-  for zone in zones:
+  for zone in range(4):
     for x in range(0, 100):
       for y in range(0, 100):
         z = math.sin(x / 50.0) * math.sin(y / 50.0) * zone
