@@ -2,6 +2,7 @@
 
 import argparse
 import pandas as pd
+import numpy as np
 import math
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -38,6 +39,7 @@ if args.extent:
 zones = None
 if args.zones:
   zones = [int(i) for i in args.zones.split(",")]
+anim = args.save and args.output_filename.endswith('.gif')
 figtitle = "{} vs {} vs {}".format(*axes)
 
 def search_files(directory='.'):
@@ -92,10 +94,16 @@ def plot(df):
   if args.vmax:
     zmax = args.vmax
 
+  ims = []
+
   for i, z in enumerate(zones):
     dz = df[df["zone"] == z]
-    ax = subplots[i]
     piv = pd.pivot_table(dz, values=axes[2], index = axes[1], columns=axes[0])
+    if anim:
+      plt.clf()
+      ax = plt.gca()
+    else:
+      ax = subplots[i]
     im = ax.pcolormesh(piv.columns, piv.index, piv, cmap=args.colormap, vmin=zmin, vmax=zmax)
     ax.yaxis.set_major_locator(ticker.LinearLocator(args.ticks))
     ax.xaxis.set_major_locator(ticker.LinearLocator(args.ticks))
@@ -111,8 +119,21 @@ def plot(df):
     ax.add_patch(rect)
     ax.label_outer()
 
-  cb = fig.colorbar(im, ax=subplots, ticks=ticker.LinearLocator(args.ticks), format='%.2e')
-  cb.ax.set_title(axeslabels[2], fontsize=args.font_size)
+    if anim:
+      cb = fig.colorbar(im, ticks=ticker.LinearLocator(args.ticks), format='%.2e')
+      cb.ax.set_title(axeslabels[2], fontsize=args.font_size)
+      fig.canvas.draw() # draw the canvas, cache the renderer
+      image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
+      image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+      ims.append(image)
+
+  if anim:
+    import imageio
+    imageio.mimsave(args.output_filename, ims, fps=1)
+    exit(0)
+  else:
+    cb = fig.colorbar(im, ax=subplots, ticks=ticker.LinearLocator(args.ticks), format='%.2e')
+    cb.ax.set_title(axeslabels[2], fontsize=args.font_size)
   return fig
 
 if args.recursive:
@@ -140,7 +161,11 @@ elif args.sample_data:
   df = pd.DataFrame(data, columns = ["x", "y", "z", "zone"])
   fig = plot(df)
   if args.save:
-    fig.savefig("sample.png")
+    if args.output_filename:
+      filename = args.output_filename
+    else:
+      filename = figtitle + ".eps"
+    fig.savefig(filename)
   else:
     plt.show()
 else:

@@ -5,6 +5,7 @@ A simple python script to plot an imshow heatmap using pandas
 
 Run `python plot.py -h` to see arguments  
 
-## Sample
+## Samples
 
 ![sample](sample.png)
+![sample gif](sample.gif)
