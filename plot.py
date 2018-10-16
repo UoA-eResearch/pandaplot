@@ -130,6 +130,8 @@ elif args.sample_data:
   data = []
   axes = ["x", "y", "z"]
   axeslabels = axes
+  if not zones:
+    zones = [0, 1, 2, 3]
   for zone in range(4):
     for x in range(0, 100):
       for y in range(0, 100):
