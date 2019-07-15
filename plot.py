@@ -14,7 +14,8 @@ parser.add_argument('-f', '--file', default="Plot_Data_Elem", help='The file to 
 parser.add_argument('-a', '--axes', default='r,z,P', help='Which columns to plot, in the x y and z dimensions. Comma separated, defaults to r,z,P')
 parser.add_argument('-al', '--axeslabels', help='Labels for the x,y,z axes')
 parser.add_argument('-s', '--save', action='store_true', help='Whether to save the figure or display it')
-parser.add_argument('-o', '--output_filename', help='The filename to save the resulting figure to')
+parser.add_argument('-o', '--output_filename', default="output.png", help='The filename to save the resulting figure to')
+parser.add_argument('-d', '--dpi', default=100, type=int, help='DPI of the output')
 parser.add_argument('-r', '--recursive', action='store_true', help='Whether to traverse the directory tree looking for FILE')
 parser.add_argument('-od', '--output_directory', default="plots", help='When running recursively, which directory to save plots to')
 parser.add_argument('-e', '--extent', help='Limit the drawn area. Left, right, bottom, top.')
@@ -146,7 +147,7 @@ if args.recursive:
     fig = plot(df)
     safe_f = f.replace(args.file, "").replace("/", "_").replace(".", "")
     filename = os.path.join(args.output_directory, safe_f)
-    fig.savefig(filename)
+    fig.savefig(filename, dpi=args.dpi)
 elif args.sample_data:
   data = []
   axes = ["x", "y", "z"]
@@ -165,7 +166,7 @@ elif args.sample_data:
       filename = args.output_filename
     else:
       filename = figtitle + ".eps"
-    fig.savefig(filename)
+    fig.savefig(filename, dpi=args.dpi)
   else:
     plt.show()
 else:
@@ -176,7 +177,7 @@ else:
       filename = args.output_filename
     else:
       filename = figtitle + ".eps"
-    fig.savefig(filename)
+    fig.savefig(filename, dpi=args.dpi)
   else:
     plt.show()
 
