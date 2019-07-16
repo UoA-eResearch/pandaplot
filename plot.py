@@ -43,6 +43,9 @@ if args.zones:
 anim = args.save and args.output_filename.endswith('.gif')
 figtitle = "{} vs {} vs {}".format(*axes)
 
+plt.rc('xtick', labelsize=args.font_size)
+plt.rc('ytick', labelsize=args.font_size)
+
 def search_files(directory='.'):
   hits = []
   for dirpath, dirnames, files in os.walk(directory):
