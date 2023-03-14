@@ -79,7 +79,7 @@ def read_file(filename):
   return df
 
 def plot(df):
-  fig, subplots = plt.subplots(nrows=len(zones), sharex=True, figsize=(10,10), squeeze=False)
+  fig, subplots = plt.subplots(nrows=len(zones), sharex=True, sharey=True, figsize=(10,10), squeeze=False)
   subplots = subplots.ravel()
 
   if extent:
@@ -116,7 +116,7 @@ def plot(df):
       ax.set_ylim(extent[2:])
     ax.set_xlabel(axeslabels[0], fontsize=args.font_size)
     ax.set_ylabel(axeslabels[1], fontsize=args.font_size)
-    title = ax.set_title("Day {}".format(z * args.zone_factor), position=(1.01, .5), rotation=-90, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes, fontsize=args.font_size)
+    title = ax.set_title("Day {}".format(z * args.zone_factor), x=1.01, y=.5, rotation=-90, horizontalalignment='left', verticalalignment='center', transform=ax.transAxes, fontsize=args.font_size)
     rect = plt.Rectangle(
       (1,1), width=1, height=.05, angle=-90, linewidth=1, transform=ax.transAxes, fill=False, clip_on=False
     )
