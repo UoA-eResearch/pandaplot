@@ -7,10 +7,11 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import os
+from glob import glob
 
 parser = argparse.ArgumentParser(description='Make a graph')
 parser.add_argument('-c', '--colormap', default="jet", help='Which colorscheme to use')
-parser.add_argument('-f', '--file', help='The files to read in', nargs='+')
+parser.add_argument('-f', '--file', default="Plot_Data_Elem", help='The files to read in', nargs='+')
 parser.add_argument('-a', '--axes', default='r,z,P', help='Which columns to plot, in the x y and z dimensions. Comma separated, defaults to r,z,P')
 parser.add_argument('-al', '--axeslabels', help='Labels for the x,y,z axes')
 parser.add_argument('-cl', '--columnlabels', help='Labels for the columns in a subplot')
@@ -18,7 +19,6 @@ parser.add_argument('-s', '--save', action='store_true', help='Whether to save t
 parser.add_argument('-o', '--output_filename', default="output.png", help='The filename to save the resulting figure to')
 parser.add_argument('-d', '--dpi', default=100, type=int, help='DPI of the output')
 parser.add_argument('-r', '--recursive', action='store_true', help='Whether to traverse the directory tree looking for FILE')
-parser.add_argument('-od', '--output_directory', default="plots", help='When running recursively, which directory to save plots to')
 parser.add_argument('-e', '--extent', help='Limit the drawn area. Left, right, bottom, top.')
 parser.add_argument('-t', '--ticks', help='Number of ticks', default=5)
 parser.add_argument('-fs', '--font_size', help='Font size', type=int, default=10)
@@ -46,15 +46,16 @@ figtitle = "{} vs {} vs {}".format(*axes)
 plt.rc('xtick', labelsize=args.font_size)
 plt.rc('ytick', labelsize=args.font_size)
 
-def search_files(directory='.'):
-  hits = []
-  for dirpath, dirnames, files in os.walk(directory):
-    if args.file in files:
-      hits.append(os.path.join(dirpath, args.file))
-  return hits
+folder = False
 
 def read_file(filename):
   global zones
+  global folder
+
+  if os.path.isdir(filename):
+    filename += "/Plot_Data_Elem"
+    folder = True
+
   with open(filename) as f:
     lines = f.readlines()
 
@@ -107,13 +108,17 @@ def get_zminmax(dfs):
   return zmin, zmax
 
 def plot(dfs):
-  fig, subplots = plt.subplots(ncols=len(dfs), nrows=len(zones), sharex=True, sharey=True, figsize=(10,10), squeeze=False)
+  if folder:
+    fig, subplots = plt.subplots(nrows=len(zones), sharex=True, sharey=True, figsize=(10,10), squeeze=False)
+    subplots = subplots.flatten()
+  else:
+    fig, subplots = plt.subplots(ncols=len(dfs), nrows=len(zones), sharex=True, sharey=True, figsize=(10,10), squeeze=False)
   zmin, zmax = get_zminmax(dfs)
 
   columnlabels = None
   if args.columnlabels:
     columnlabels = args.columnlabels.split(",")
-  elif args.file:
+  elif not folder and args.file:
     columnlabels = [os.path.basename(f).replace("Plot_Data_Elem_", "") for f in args.file]
 
   if columnlabels:
@@ -126,11 +131,18 @@ def plot(dfs):
     ims = []
 
     for i, z in enumerate(zones):
+      if folder:
+        if df_i == i:
+          print(f"Plotting {args.file[df_i]} zone {z} in row {i}")
+        else:
+          continue
       dz = df[df["zone"] == z]
       piv = pd.pivot_table(dz, values=axes[2], index = axes[1], columns=axes[0])
       if anim:
         plt.clf()
         ax = plt.gca()
+      elif folder:
+        ax = subplots[i]
       else:
         ax = subplots[i, df_i]
       im = ax.pcolormesh(piv.columns, piv.index, piv, cmap=args.colormap, vmin=zmin, vmax=zmax)
@@ -149,13 +161,13 @@ def plot(dfs):
       ax.add_patch(rect)
       ax.label_outer()
 
-  if anim:
-    cb = fig.colorbar(im, ticks=ticker.LinearLocator(args.ticks), format='%.2e')
-    cb.ax.set_title(axeslabels[2], fontsize=args.font_size)
-    fig.canvas.draw() # draw the canvas, cache the renderer
-    image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
-    image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-    ims.append(image)
+      if anim:
+        cb = fig.colorbar(im, ticks=ticker.LinearLocator(args.ticks), format='%.2e')
+        cb.ax.set_title(axeslabels[2], fontsize=args.font_size)
+        fig.canvas.draw() # draw the canvas, cache the renderer
+        image = np.frombuffer(fig.canvas.tostring_rgb(), dtype='uint8')
+        image = image.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+        ims.append(image)
 
   if anim:
     import imageio
@@ -167,16 +179,8 @@ def plot(dfs):
   return fig
 
 if args.recursive:
-  files = search_files()
-  if not os.path.isdir(args.output_directory):
-    os.mkdir(args.output_directory)
-  for f in files:
-    print("plotting " + f)
-    df = read_file(args.file)
-    fig = plot(df)
-    safe_f = f.replace(args.file, "").replace("/", "_").replace(".", "")
-    filename = os.path.join(args.output_directory, safe_f)
-    fig.savefig(filename, dpi=args.dpi)
+  files = glob("**/" + args.file, recursive=True)
+  dfs = [read_file(f) for f in files]
 elif args.sample_data:
   data = []
   axes = ["x", "y", "z"]
@@ -190,24 +194,18 @@ elif args.sample_data:
         data.append([x, y, z, zone])
   df = pd.DataFrame(data, columns = ["x", "y", "z", "zone"])
   df["zone_T"] = df.zone * 365
-  fig = plot([df])
-  if args.save:
-    if args.output_filename:
-      filename = args.output_filename
-    else:
-      filename = figtitle + ".eps"
-    fig.savefig(filename, dpi=args.dpi)
-  else:
-    plt.show()
+  dfs = [df]
 else:
   dfs = [read_file(f) for f in args.file]
-  fig = plot(dfs)
-  if args.save:
-    if args.output_filename:
-      filename = args.output_filename
-    else:
-      filename = figtitle + ".eps"
-    fig.savefig(filename, dpi=args.dpi)
+
+fig = plot(dfs)
+
+if args.save:
+  if args.output_filename:
+    filename = args.output_filename
   else:
-    plt.show()
+    filename = figtitle + ".eps"
+  fig.savefig(filename, dpi=args.dpi)
+else:
+  plt.show()
 
