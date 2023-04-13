@@ -110,15 +110,17 @@ def plot(dfs):
   fig, subplots = plt.subplots(ncols=len(dfs), nrows=len(zones), sharex=True, sharey=True, figsize=(10,10), squeeze=False)
   zmin, zmax = get_zminmax(dfs)
 
+  columnlabels = None
   if args.columnlabels:
     columnlabels = args.columnlabels.split(",")
-  else:
+  elif args.file:
     columnlabels = [os.path.basename(f).replace("Plot_Data_Elem_", "") for f in args.file]
 
-  for ax, col in zip(subplots[0], columnlabels):
-    ax.annotate(col, xy=(0.5, 1), xytext=(0, 5),
-                xycoords='axes fraction', textcoords='offset points',
-                size='large', ha='center', va='baseline')
+  if columnlabels:
+    for ax, col in zip(subplots[0], columnlabels):
+      ax.annotate(col, xy=(0.5, 1), xytext=(0, 5),
+                  xycoords='axes fraction', textcoords='offset points',
+                  size='large', ha='center', va='baseline')
 
   for df_i, df in enumerate(dfs):
     ims = []
@@ -187,7 +189,8 @@ elif args.sample_data:
         z = math.sin(x / 50.0) * math.sin(y / 50.0) * zone
         data.append([x, y, z, zone])
   df = pd.DataFrame(data, columns = ["x", "y", "z", "zone"])
-  fig = plot(df)
+  df["zone_T"] = df.zone * 365
+  fig = plot([df])
   if args.save:
     if args.output_filename:
       filename = args.output_filename
